@@ -149,3 +149,4 @@ This **user-based collaborative filtering system** recommends items by analyzing
 
 #OUTPUT
 
+![Image](https://github.com/user-attachments/assets/8584e082-a567-4326-ba41-7bfbe2f90af6)
