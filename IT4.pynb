@@ -1,0 +1,41 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Sample dataset (Extended User-Item ratings)
+data = {
+    "User": [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+              6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10],
+    "Item": [1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 4, 5, 1, 3, 4, 5, 2, 3, 4, 5,
+              1, 2, 3, 4, 1, 3, 4, 5, 2, 3, 4, 5, 1, 2, 3, 5, 2, 3, 4, 5],
+    "Rating": [5, 3, 4, 2, 4, 2, 5, 3, 3, 5, 4, 4, 5, 3, 4, 2, 1, 5, 3, 4,
+                4, 5, 3, 2, 5, 2, 4, 3, 3, 5, 4, 5, 4, 3, 5, 2, 1, 4, 5, 3]
+}
+df = pd.DataFrame(data)
+
+# Create a user-item matrix
+user_item_matrix = df.pivot(index="User", columns="Item", values="Rating").fillna(0)
+
+# Compute cosine similarity between users
+user_similarity = cosine_similarity(user_item_matrix)
+user_similarity_df = pd.DataFrame(user_similarity, index=user_item_matrix.index, columns=user_item_matrix.index)
+
+# Function to get recommendations
+def recommend(user_id, num_recommendations=3):
+    similar_users = user_similarity_df[user_id].sort_values(ascending=False).index[1:]
+    user_ratings = user_item_matrix.loc[user_id]
+    recommendations = {}
+    
+    for similar_user in similar_users:
+        similar_user_ratings = user_item_matrix.loc[similar_user]
+        for item in user_item_matrix.columns:
+            if user_ratings[item] == 0 and similar_user_ratings[item] > 0:
+                recommendations[item] = recommendations.get(item, 0) + similar_user_ratings[item]
+    
+    sorted_recommendations = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
+    return [item for item, rating in sorted_recommendations[:num_recommendations]]
+
+# Example recommendations for multiple users
+for user_id in user_item_matrix.index:
+    print(f"Recommended items for User {user_id}: {recommend(user_id)}")
